@@ -4,6 +4,7 @@
   "description": "A lightweight utility that simplifies working with the Amazon Aurora Serverless Data API",
   "main": "index.js",
   "scripts": {
+    "browserify": "browserify browser.js > bundle.js",
     "test": "jest",
     "test-ci": "eslint . && jest",
     "lint": "eslint ."
