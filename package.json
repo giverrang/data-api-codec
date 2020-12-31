@@ -1,7 +1,7 @@
 {
-  "name": "data-api-client",
+  "name": "data-api-codec",
   "version": "1.2.0",
-  "description": "A lightweight wrapper that simplifies working with the Amazon Aurora Serverless Data API",
+  "description": "A lightweight utility that simplifies working with the Amazon Aurora Serverless Data API",
   "main": "index.js",
   "scripts": {
     "test": "jest",
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jeremydaly/data-api-client.git"
+    "url": "git+https://github.com/giverrang/data-api-codec.git"
   },
   "keywords": [
     "serverless",
@@ -18,12 +18,13 @@
     "aurora",
     "aws"
   ],
-  "author": "Jeremy Daly <jeremy@jeremydaly.com>",
+  "author": "Roy Paterson <roy@roypaterson.com>",
+  "author1": "Jeremy Daly <jeremy@jeremydaly.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jeremydaly/data-api-client/issues"
+    "url": "https://github.com/giverrang/data-api-codec/issues"
   },
-  "homepage": "https://github.com/jeremydaly/data-api-client#readme",
+  "homepage": "https://github.com/giverrang/data-api-codec#readme",
   "devDependencies": {
     "aws-sdk": "^2.811.0",
     "eslint": "^6.8.0",
