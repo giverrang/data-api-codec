@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/giverrang/data-api-codec#readme",
   "devDependencies": {
+    "browserify": "^17.0.0",
     "eslint": "^6.8.0",
     "jest": "^25.5.4",
     "rewire": "^4.0.1"
