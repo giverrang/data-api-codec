@@ -1,16 +1,6 @@
 const rewire = require('rewire')
 const dataApiClient = rewire('./index')
 
-// test('test', () => {
-//   let client = dataApiClient({
-//     secretArn: 'secretArn',
-//     resourceArn: 'resourceArn',
-//     database: 'db'
-//   })
-//
-//   console.log(client);
-// })
-
 describe('utility', () => {
 
   test('error', async () => {
@@ -19,49 +9,10 @@ describe('utility', () => {
     expect(err).toThrow('test error')
   })
 
-  test('omit', async () => {
-    const omit = dataApiClient.__get__('omit')
-    let result = omit({ a: 1, b: 2, c: 3},['c'])
-    expect(result).toEqual({ a: 1, b: 2 })
-  })
-
-  test('pick', async () => {
-    const pick = dataApiClient.__get__('pick')
-    let result = pick({ a: 1, b: 2, c: 3},['a','c'])
-    expect(result).toEqual({ a: 1, c: 3 })
-  })
-
-  test('flatten', async () => {
-    const flatten = dataApiClient.__get__('flatten')
-    let result = flatten([[1,2,3],4,[5,6],7,8])
-    expect(result).toEqual([1,2,3,4,5,6,7,8])
-  })
-
 }) // end utility
 
 
 describe('query parsing', () => {
-
-  describe('parseSQL', () => {
-
-    const parseSQL = dataApiClient.__get__('parseSQL')
-
-    test('string', async () => {
-      let result = parseSQL([`SELECT * FROM myTable`])
-      expect(result).toBe('SELECT * FROM myTable')
-    })
-
-    test('object', async () => {
-      let result = parseSQL([{ sql: `SELECT * FROM myTable` }])
-      expect(result).toBe('SELECT * FROM myTable')
-    })
-
-    test('no query (error)', async () => {
-      let result = () => parseSQL([])
-      expect(result).toThrow(`No 'sql' statement provided.`)
-    })
-  }) // end parseSQL
-
 
   describe('parseParams', () => {
 
@@ -110,87 +61,6 @@ describe('query parsing', () => {
   }) // end parse params
 
 }) // end query parsing
-
-
-describe('query configuration parsing', () => {
-
-  test('mergeConfig', async () => {
-    const mergeConfig = dataApiClient.__get__('mergeConfig')
-    let result = mergeConfig({ secretArn:'secretArn',resourceArn:'resourceArn' }, { database: 'db' })
-    expect(result).toEqual({ secretArn:'secretArn',resourceArn:'resourceArn', database: 'db' })
-  })
-
-  describe('parseDatabase', () => {
-
-    const parseDatabase = dataApiClient.__get__('parseDatabase')
-
-    test('from config w/ transaction', async () => {
-      let result = parseDatabase({ database: 'db', transactionId: 'txid'})
-      expect(result).toBe('db')
-    })
-
-    test('from args', async () => {
-      let result = parseDatabase({ database: 'db' }, [{ database: 'db2' }])
-      expect(result).toBe('db2')
-    })
-
-    test('from args, not string (error)', async () => {
-      let result = () => parseDatabase({ database: 'db' }, [{ database: 1 }])
-      expect(result).toThrow(`'database' must be a string.`)
-    })
-
-    test('from config', async () => {
-      let result = parseDatabase({ database: 'db' }, [{}])
-      expect(result).toBe('db')
-    })
-
-    test('no database provided (return undefined)', async () => {
-      let result = parseDatabase({}, [{}])
-      expect(result).toBe.undefined
-    })
-
-  }) // end parseDatabase
-
-  describe('parseHydrate', () => {
-
-    const parseHydrate = dataApiClient.__get__('parseHydrate')
-
-    test('parseHydrate - from args', async () => {
-      let result = parseHydrate({ hydrateColumnNames: true },[{ hydrateColumnNames: false }])
-      expect(result).toBe(false)
-    })
-
-    test('parseHydrate - from config', async () => {
-      let result = parseHydrate({ hydrateColumnNames: true },[{ }])
-      expect(result).toBe(true)
-    })
-
-    test('parseHydrate - from args, not boolean (error)', async () => {
-      let result = () => parseHydrate({ hydrateColumnNames: true },[{ hydrateColumnNames: 'false' }])
-      expect(result).toThrow(`'hydrateColumnNames' must be a boolean.`)
-    })
-
-  })
-
-
-  describe('prepareParams', () => {
-
-    const prepareParams = dataApiClient.__get__('prepareParams')
-
-    test('prepareParams - omit specific args, merge others', async () => {
-      let result = prepareParams({ secretArn:'secretArn',resourceArn:'resourceArn' },
-        [{ hydrateColumnNames: true, parameters: [1,2,3], test: true }])
-      expect(result).toEqual({ secretArn: 'secretArn', resourceArn: 'resourceArn', test: true })
-    })
-
-    test('prepareParams - no args', async () => {
-      let result = prepareParams({ secretArn:'secretArn',resourceArn:'resourceArn' },[])
-      expect(result).toEqual({ secretArn: 'secretArn', resourceArn: 'resourceArn' })
-    })
-
-  }) // end prepareParams
-
-}) // end query config parsing
 
 
 describe('query parameter processing', () => {
@@ -352,191 +222,9 @@ describe('query parameter processing', () => {
 
   })
 
-  describe('getSqlParams', () => {
-
-    const getSqlParams = dataApiClient.__get__('getSqlParams')
-
-    test('named parameters', async () => {
-      let result = getSqlParams('SELECT * FROM myTable WHERE id = :id AND test = :test')
-      expect(result).toEqual({ id: { type: 'n_ph'}, test: { type: 'n_ph'} })
-    })
-
-    test('named identifiers', async () => {
-      let result = getSqlParams('SELECT ::name FROM myTable WHERE id = :id')
-      expect(result).toEqual({ id: { type: 'n_ph'}, name: { type: 'n_id'} })
-    })
-
-  }) // end getSqlParams
-
-
-  describe('processParams', () => {
-
-    const processParams = dataApiClient.__get__('processParams')
-
-    test('single param, single record', async () => {
-      let { processedParams,escapedSql } = processParams(
-        'pg',
-        'SELECT * FROM myTable WHERE id = :id',
-        { id: { type: 'n_ph' } },
-        [{ name: 'id', value: 1 }]
-      )
-      expect(escapedSql).toBe('SELECT * FROM myTable WHERE id = :id')
-      expect(processedParams).toEqual([
-        { name: 'id', value: { longValue: 1 } }
-      ])
-    })
-
-    test('mulitple params, named param, single record', async () => {
-      let { processedParams,escapedSql } = processParams(
-        'pg',
-        'SELECT ::columnName FROM myTable WHERE id = :id AND id2 = :id2',
-        { id: { type: 'n_ph' }, id2: { type: 'n_ph' }, columnName: { type: 'n_id' } },
-        [
-          { name: 'id', value: 1 },
-          { name: 'id2', value: 2 },
-          { name: 'columnName', value: 'testColumn' }
-        ]
-      )
-      expect(escapedSql).toBe('SELECT `testColumn` FROM myTable WHERE id = :id AND id2 = :id2')
-      expect(processedParams).toEqual([
-        { name: 'id', value: { longValue: 1 } },
-        { name: 'id2', value: { longValue: 2 } }
-      ])
-    })
-
-    test('single param, multiple records', async () => {
-      let { processedParams,escapedSql } = processParams(
-        'pg',
-        'SELECT * FROM myTable WHERE id = :id',
-        { id: { type: 'n_ph' } },
-        [
-          [{ name: 'id', value: 1 }],
-          [{ name: 'id', value: 2 }]
-        ]
-      )
-      expect(escapedSql).toBe('SELECT * FROM myTable WHERE id = :id')
-      expect(processedParams).toEqual([
-        [ { name: 'id', value: { longValue: 1 } } ],
-        [ { name: 'id', value: { longValue: 2 } } ]
-      ])
-    })
-
-    test('multiple params, multiple records', async () => {
-      let { processedParams,escapedSql } = processParams(
-        'pg',
-        'SELECT * FROM myTable WHERE id = :id',
-        { id: { type: 'n_ph' }, id2: { type: 'n_ph' } },
-        [
-          [{ name: 'id', value: 1 }, { name: 'id2', value: 2 } ],
-          [{ name: 'id', value: 2 }, { name: 'id2', value: 3 } ]
-        ]
-      )
-      expect(escapedSql).toBe('SELECT * FROM myTable WHERE id = :id')
-      expect(processedParams).toEqual([
-        [ { name: 'id', value: { longValue: 1 } }, { name: 'id2', value: { longValue: 2 } } ],
-        [ { name: 'id', value: { longValue: 2 } }, { name: 'id2', value: { longValue: 3 } } ]
-      ])
-    })
-
-    test('mulitple params, named params, multiple records', async () => {
-      let { processedParams,escapedSql } = processParams(
-        'pg',
-        'SELECT ::columnName FROM myTable WHERE id = :id AND id2 = :id2',
-        { id: { type: 'n_ph' }, id2: { type: 'n_ph' }, columnName: { type: 'n_id' } },
-        [
-          [
-            { name: 'id', value: 1 },
-            { name: 'id2', value: 2 },
-            { name: 'columnName', value: 'testColumn' }
-          ],
-          [
-            { name: 'id', value: 2 },
-            { name: 'id2', value: 3 },
-            { name: 'columnName', value: 'testColumnx' } // ignored
-          ]
-        ]
-      )
-      expect(escapedSql).toBe('SELECT `testColumn` FROM myTable WHERE id = :id AND id2 = :id2')
-      expect(processedParams).toEqual([
-        [
-          { name: 'id', value: { longValue: 1 } },
-          { name: 'id2', value: { longValue: 2 } }
-        ],
-        [
-          { name: 'id', value: { longValue: 2 } },
-          { name: 'id2', value: { longValue: 3 } }
-        ]
-      ])
-    })
-
-    test('typecasting params', async () => {
-      let { processedParams,escapedSql } = processParams(
-        'pg',
-        'INSERT INTO users(id, name, meta) VALUES(:id, :name, :meta)',
-        { id: { type: 'n_ph' }, name: { type: 'n_ph' }, meta: { type: 'n_ph' } },
-        [
-          { name: 'id', value: '0bb99248-2e7d-4007-a4b2-579b00649ce1', cast: 'uuid' },
-          { name: 'name', value: 'Test' },
-          { name: 'meta', value: '{"extra": true}', cast: 'jsonb' }
-        ]
-      )
-      expect(escapedSql).toBe('INSERT INTO users(id, name, meta) VALUES(:id::uuid, :name, :meta::jsonb)')
-      expect(processedParams).toEqual([
-        { name: 'id', value: { stringValue: '0bb99248-2e7d-4007-a4b2-579b00649ce1' } },
-        { name: 'name', value: { stringValue: 'Test' } },
-        { name: 'meta', value: { stringValue: '{"extra": true}' } }
-      ])
-    })
-
-  }) // end processParams
-
 })
 
 describe('querying', () => {
-
-  describe('query', () => {
-
-    const query = dataApiClient.__get__('query')
-
-    let parameters = {}
-
-    const config = {
-      secretArn: 'secretArn',
-      resourceArn: 'resourceArn',
-      database: 'db',
-      RDS: {
-        executeStatement: (params) => {
-          // capture the parameters for testing
-          parameters = params
-          return {
-            promise: () => {
-              return require('./test/sample-query-response.json')
-            }
-          }
-        }
-      }
-    }
-
-    test('simple query', async () => {
-
-      let result = await query(config,'SELECT * FROM table WHERE id < :id',{ id: 3 })
-
-      expect(result).toEqual({
-        records: [
-          [ 1, 'Category 1', null, '2019-11-12 22:00:11', '2019-11-12 22:15:25', null ],
-          [ 2, 'Category 2', 'Description of Category 2', '2019-11-12 22:17:11', '2019-11-12 22:21:36', null ]
-        ]
-      })
-      expect(parameters).toEqual({
-        secretArn: 'secretArn',
-        resourceArn: 'resourceArn',
-        database: 'db',
-        sql: 'SELECT * FROM table WHERE id < :id',
-        parameters: [ { name: 'id', value: { longValue: 3 } } ]
-      })
-
-    })
-  }) // end query
 
   describe('formatRecords', () => {
 

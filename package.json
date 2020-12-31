@@ -26,14 +26,11 @@
   },
   "homepage": "https://github.com/giverrang/data-api-codec#readme",
   "devDependencies": {
-    "aws-sdk": "^2.811.0",
     "eslint": "^6.8.0",
     "jest": "^25.5.4",
     "rewire": "^4.0.1"
   },
-  "dependencies": {
-    "sqlstring": "^2.3.2"
-  },
+  "dependencies": {},
   "files": [
     "index.js"
   ]
